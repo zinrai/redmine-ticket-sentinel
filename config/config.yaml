@@ -1,0 +1,27 @@
+redmine:
+  base_url: "http://localhost:3000"
+  username: "admin"
+  password: "abcdefghij"
+  project_id: "proj"
+  query_id: 1
+
+slack:
+  webhook_url: "https://hooks.slack.com/services/your/webhook/url"
+
+rules:
+  path: "./rules"
+  names:
+    - "#StoryWithoutChildren"
+    - "#SubTaskToStory"
+    - "#ForgotUpdateStory"
+    - "#TooManySubTasks"
+    - "#TooManySubTaskTickets"
+    - "#StoryOneOwnTicket"
+    - "#StoryOneTeamMemberTicket"
+    - "#SubTaskOneRemainInProgress"
+    - "#SubTaskOneRemainNew"
+    - "#NoChildTaskStory"
+    - "#NoChildTicketSubTask"
+    - "#ChildTicketStory"
+    - "#TaskChildTicket"
+    - "#SubTaskChildTicket"
