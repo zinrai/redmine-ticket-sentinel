@@ -48,6 +48,8 @@ func loadConfig(path string) (*Config, error) {
 func main() {
 	// Parse command line flags
 	configPath := flag.String("config", "config.yaml", "Path to configuration file")
+	debugFlag := flag.Bool("debug", false, "Use stdout for notifications instead of Slack")
+	ruleFlag := flag.String("rule", "", "Specify a single rule to evaluate (e.g., #StoryWithoutChildren)")
 	flag.Parse()
 
 	// Setup logging
@@ -59,7 +61,7 @@ func main() {
 		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
-	// Initialize infrastructure
+	// Initialize Redmine client
 	redmineClient := infrastructure.NewRedmineClient(
 		config.Redmine.BaseURL,
 		config.Redmine.Username,
@@ -68,18 +70,30 @@ func main() {
 		config.Redmine.QueryID,
 	)
 
-	slackNotifier := infrastructure.NewSlackNotifier(
-		config.Slack.WebhookURL,
-		config.Redmine.BaseURL,
-	)
+	// Choose notifier based on debug flag
+	var notifier domain.Notifier
+	if *debugFlag {
+		notifier = infrastructure.NewStdoutNotifier()
+	} else {
+		notifier = infrastructure.NewSlackNotifier(
+			config.Slack.WebhookURL,
+			config.Redmine.BaseURL,
+		)
+	}
+
+	// Use specified rule or all rules from config
+	ruleNames := config.Rules.Names
+	if *ruleFlag != "" {
+		log.Printf("Using specified rule: %s", *ruleFlag)
+		ruleNames = []string{*ruleFlag}
+	}
 
 	// Initialize ticket checker
 	checker, err := service.NewTicketChecker(
 		redmineClient,
-		redmineClient,
-		slackNotifier,
+		notifier,
 		config.Rules.Path,
-		config.Rules.Names,
+		ruleNames,
 	)
 	if err != nil {
 		log.Fatalf("Failed to initialize ticket checker: %v", err)
